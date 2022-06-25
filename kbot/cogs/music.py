@@ -201,7 +201,16 @@ class Music(commands.Cog, name='Muzyczne'):
             btn2lock = True
         else:
             btn2lock = False
-        shuff = 'Przemieszanie włączone' if player.shuffle else 'Przemieszanie wyłączone'
+        if player.shuffle==0:
+            shuff = 'Przemieszanie wyłączone'
+        elif player.shuffle==1:
+            shuff = 'Przemieszanie włączone (raz losowane)'
+        elif player.shuffle==2:
+            shuff = 'Przemieszanie włączone (każdy losowy)'
+        elif player.shuffle==3:
+            shuff = 'Przemieszanie włączone (bez powtórek)'
+        else:
+            shuff = 'co sie odwaliło wtf'
         lood = 'Zapętlanie włączone' if player.repeat else 'Zapętlanie wyłączone'
         await ctx.send(content=queuesend+'\n'+shuff+'\n'+lood+'```',
         components = [[
@@ -405,6 +414,13 @@ class Music(commands.Cog, name='Muzyczne'):
             await ctx.send('Użycie: !jump <pozycja>')
 
     @commands.guild_only()
+    @commands.command(aliases=['fsh','fshuffle'])
+    async def forceshuffle(self, ctx):
+        '''Jednorazowe przemieszanie playlisty. !fshuffle'''
+        player = self.bot.lavalink.player_manager.get(ctx.guild.id)
+        player.shuffel()
+
+    @commands.guild_only()
     @commands.command(aliases=['sh'])
     async def shuffle(self, ctx):
         '''Zmienia tryb przemieszania\n0:wyłączenie 1:przemieszanie na koniec 2:każdy utwór losowy. !shuffle'''
@@ -414,11 +430,14 @@ class Music(commands.Cog, name='Muzyczne'):
             await ctx.send('Przemieszanie wyłączone')
         elif player.shuffle==1:
             if not player.repeat:
-                await ctx.send('Przemieszanie włączone na tryb 1 \n**Wymagany loop do poprawnego funkcjonowania**')
+                await ctx.send('Przemieszanie włączone na tryb 1 (losuje raz)\n**Wymagany loop do poprawnego funkcjonowania**')
             else:
-                await ctx.send('Przemieszanie włączone na tryb 1')
+                await ctx.send('Przemieszanie włączone na tryb 1 (losuje raz)')
+        elif player.shuffle==2:
+            await ctx.send('Przemieszanie włączone na tryb 2 (każdy losowy)')
         else:
-            await ctx.send('Przemieszanie włączone na tryb 2')
+            await ctx.send('Przemieszanie włączone na tryb 3 (każdy losowy bez powtórek)')
+            
 
     @commands.guild_only()
     @commands.command(aliases=['dc'])
@@ -465,7 +484,16 @@ class Music(commands.Cog, name='Muzyczne'):
                 btn2lock = True
             else:
                 btn2lock = False
-            shuff = 'Przemieszanie włączone' if player.shuffle else 'Przemieszanie wyłączone'
+            if player.shuffle==0:
+                shuff = 'Przemieszanie wyłączone'
+            elif player.shuffle==1:
+                shuff = 'Przemieszanie włączone (raz losowane)'
+            elif player.shuffle==2:
+                shuff = 'Przemieszanie włączone (każdy losowy)'
+            elif player.shuffle==3:
+                shuff = 'Przemieszanie włączone (bez powtórek)'
+            else:
+                shuff = 'co sie odwaliło wtf'
             lood = 'Zapętlanie włączone' if player.repeat else 'Zapętlanie wyłączone'
             await interaction.edit_origin(content=queuesend+'\n'+shuff+'\n'+lood+'```',
             components = [[
