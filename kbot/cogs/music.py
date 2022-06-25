@@ -418,7 +418,7 @@ class Music(commands.Cog, name='Muzyczne'):
     async def forceshuffle(self, ctx):
         '''Jednorazowe przemieszanie playlisty. !fshuffle'''
         player = self.bot.lavalink.player_manager.get(ctx.guild.id)
-        player.shuffel()
+        await player.shuffel()
 
     @commands.guild_only()
     @commands.command(aliases=['sh'])
