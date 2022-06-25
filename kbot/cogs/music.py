@@ -425,7 +425,7 @@ class Music(commands.Cog, name='Muzyczne'):
     async def shuffle(self, ctx):
         '''Zmienia tryb przemieszania\n0:wyłączenie 1:przemieszanie na koniec 2:każdy utwór losowy. !shuffle'''
         player = self.bot.lavalink.player_manager.get(ctx.guild.id)
-        player.set_shuffle((player.shuffle+1)%3)
+        player.set_shuffle((player.shuffle+1)%4)
         if player.shuffle==0:
             await ctx.send('Przemieszanie wyłączone')
         elif player.shuffle==1:

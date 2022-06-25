@@ -308,15 +308,24 @@ class DefaultPlayer(BasePlayer):
                 return
                 
 
-            pos_at = randrange(len(self.queue)) if self.shuffle==2 else self.pos
-            track = self.queue[pos_at]
-            if self.shuffle!=2:
+            if self.shuffle==3:
+                self.queue.insert(self.pos,self.queue.pop(randrange(self.pos,len(self.queue))))
+                track = self.queue[self.pos]
                 self.pos+=1
-                if self.pos>=len(self.queue) and self.repeat:
+                if self.pos >=len(self.queue) and self.repeat:
                     self.pos=0
-                    if self.shuffle==1:
-                        await self.shuffel()
-                        print('dzialaowo')
+
+
+            else:
+                pos_at = randrange(len(self.queue)) if self.shuffle==2 else self.pos
+                track = self.queue[pos_at]
+                if self.shuffle!=2:
+                    self.pos+=1
+                    if self.pos>=len(self.queue) and self.repeat:
+                        self.pos=0
+                        if self.shuffle==1:
+                            await self.shuffel()
+
         options = {}
 
         if start_time is not None:
