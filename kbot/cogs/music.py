@@ -485,7 +485,7 @@ class Music(commands.Cog, name='Muzyczne'):
             pageid = int(interaction.message.content.split('Strona ')[1].split(':')[0])+int(interaction.custom_id)-2
             queuesend = '```Strona '+str(pageid+1)+':\n'
             for idx, val in enumerate(player.queue[pageid*10:pageid*10+10],start=pageid*10):
-                if idx +1 == player.pos:
+                if idx == player.pos:
                     queuesend += '    ⬐ current track\n' + str(idx+1)+') '+val['title'] + '\n    ⬑ current track\n'
                 else:
                     queuesend += ' '+str(idx+1)+') '+val['title'] + '\n' if idx<9 else str(idx+1)+') '+val['title'] + '\n'
