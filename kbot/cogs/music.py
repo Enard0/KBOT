@@ -271,7 +271,7 @@ class Music(commands.Cog, name='Muzyczne'):
         if os.path.exists(name):
             await ctx.send('Nazwa zajęta')
             return
-        if name!='index.py':
+        if name!='index.py' and '.' not in name:
             player = self.bot.lavalink.player_manager.get(ctx.guild.id)
             out = []
             for i in player.queue:
@@ -280,7 +280,7 @@ class Music(commands.Cog, name='Muzyczne'):
                 except:
                     pass
             if out != []:
-                with open(name,'w') as file:
+                with open("music/"+name,'w') as file:
                     file.write(';'.join(out))
         await ctx.send('Zapisano')
 
@@ -288,10 +288,10 @@ class Music(commands.Cog, name='Muzyczne'):
     @commands.command()
     async def load(self, ctx, *, name: str):
         """Wczytuje playliste. !load <nazwa_zapisu>"""
-        if not os.path.exists(name) or '.' in name:
+        if not os.path.exists("music/"+name) or '.' in name:
             await ctx.send('Zapis nie istnieje')
             return
-        with open(name,'r') as file:
+        with open("music/"+name,'r') as file:
             out = file.read().split(';')
         corr = 0
         err = 0
@@ -403,9 +403,18 @@ class Music(commands.Cog, name='Muzyczne'):
         player = self.bot.lavalink.player_manager.get(ctx.guild.id)
         if npos.isnumeric() and int(npos)>0 and int(npos) <= len(player.queue):
             player.pos = int(npos)-1
-            await player.play()
+            await player.play(special=True)
             embed = discord.Embed(color=discord.Color.blurple())
             embed.title = 'Przeskoczono do pozycji '+npos
+            track = player.current
+            url = 'https://www.youtube.com/watch?v='+track["identifier"] if not 'http' in track["identifier"] else track["identifier"]
+            embed.description = f'[{track["title"]}]({url})'
+            await ctx.send(embed=embed)
+        elif npos=="last":
+            player.pos = len(player.queue)-1
+            await player.play(special=True)
+            embed = discord.Embed(color=discord.Color.blurple())
+            embed.title = 'Przeskoczono do pozycji '+str(len(player.queue)-1)
             track = player.current
             url = 'https://www.youtube.com/watch?v='+track["identifier"] if not 'http' in track["identifier"] else track["identifier"]
             embed.description = f'[{track["title"]}]({url})'
@@ -422,10 +431,13 @@ class Music(commands.Cog, name='Muzyczne'):
 
     @commands.guild_only()
     @commands.command(aliases=['sh'])
-    async def shuffle(self, ctx):
-        '''Zmienia tryb przemieszania\n0:wyłączenie 1:przemieszanie na koniec 2:każdy utwór losowy. !shuffle'''
+    async def shuffle(self, ctx, *mode):
+        '''Zmienia tryb przemieszania\n0:wyłączenie 1:przemieszanie na koniec 2:każdy utwór losowy. !shuffle [tryb]'''
         player = self.bot.lavalink.player_manager.get(ctx.guild.id)
-        player.set_shuffle((player.shuffle+1)%4)
+        if mode and mode.isnumeric() and int(mode)>= 0 and int(mode)<=3:
+            player.set_shuffle(int(mode))
+        else:
+            player.set_shuffle((player.shuffle+1)%4)
         if player.shuffle==0:
             await ctx.send('Przemieszanie wyłączone')
         elif player.shuffle==1:
