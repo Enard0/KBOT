@@ -266,7 +266,7 @@ class DefaultPlayer(BasePlayer):
             self.queue.insert(index, at)
     async def shuffel(self):
         shuffle(self.queue)
-    async def play(self, track: typing.Union[AudioTrack, dict] = None, start_time: int = 0, end_time: int = 0, no_replace: bool = False):
+    async def play(self, track: typing.Union[AudioTrack, dict] = None, start_time: int = 0, end_time: int = 0, no_replace: bool = False, special: bool = False):
         """
         Plays the given track.
 
@@ -307,24 +307,29 @@ class DefaultPlayer(BasePlayer):
                 await self.node._dispatch_event(QueueEndEvent(self))
                 return
                 
-
-            if self.shuffle==3:
-                self.queue.insert(self.pos,self.queue.pop(randrange(self.pos,len(self.queue))))
-                track = self.queue[self.pos]
-                self.pos+=1
-                if self.pos >=len(self.queue) and self.repeat:
-                    self.pos=0
-
-
-            else:
-                pos_at = randrange(len(self.queue)) if self.shuffle==2 else self.pos
-                track = self.queue[pos_at]
-                if self.shuffle!=2:
+            if not special:
+                if self.shuffle==3:
+                    self.queue.insert(self.pos,self.queue.pop(randrange(self.pos,len(self.queue))))
+                    track = self.queue[self.pos]
                     self.pos+=1
-                    if self.pos>=len(self.queue) and self.repeat:
+                    if self.pos >=len(self.queue) and self.repeat:
                         self.pos=0
-                        if self.shuffle==1:
-                            await self.shuffel()
+
+
+                else:
+                    pos_at = randrange(len(self.queue)) if self.shuffle==2 else self.pos
+                    track = self.queue[pos_at]
+                    if self.shuffle!=2:
+                        self.pos+=1
+                        if self.pos>=len(self.queue) and self.repeat:
+                            self.pos=0
+                            if self.shuffle==1:
+                                await self.shuffel()
+        else:
+            track = self.queue[self.pos]
+            self.pos+=1
+            if self.pos >=len(self.queue) and self.repeat:
+                self.pos=0 
 
         options = {}
 
