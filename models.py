@@ -325,11 +325,11 @@ class DefaultPlayer(BasePlayer):
                             self.pos=0
                             if self.shuffle==1:
                                 await self.shuffel()
-        else:
-            track = self.queue[self.pos]
-            self.pos+=1
-            if self.pos >=len(self.queue) and self.repeat:
-                self.pos=0 
+            else:
+                track = self.queue[self.pos]
+                self.pos+=1
+                if self.pos >=len(self.queue) and self.repeat:
+                    self.pos=0 
 
         options = {}
 
