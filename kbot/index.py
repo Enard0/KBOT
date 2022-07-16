@@ -69,7 +69,7 @@ async def on_command_error(ctx, error):
 	elif isinstance(error, commands.CommandOnCooldown):
 		await ctx.send('Musisz odczekać '+str(round(error.retry_after,1))+'s przed ponownym użyciem tej komendy')
 	elif isinstance(error, commands.CommandNotFound):
-		pass
+		await ctx.message.remove_reaction('⌛',bot.user)
 	elif not isinstance(error, str):
 		bot.cmdlog = discord.Webhook.partial(804717240129683487, 'YkuX8BiRTn4kyBhvSWo_sVLxR0rZfOWGVm0uLCmkeYA6z_WBLdvSCchtTyE3KuZJqFHG', adapter=discord.RequestsWebhookAdapter())
 		channel = bot.get_channel(804717148705914900)
