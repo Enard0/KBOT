@@ -25,7 +25,7 @@ class Music(commands.Cog, name='Muzyczne'):
 
         if not hasattr(bot, 'lavalink'):  # This ensures the client isn't overwritten during cog reloads.
             bot.lavalink = lavalink.Client(804715280361586748)
-            bot.lavalink.add_node('127.0.0.1', 2333, 'VYTIftiyFIYVtvgbTVGHtyvguHRDTKF7itukhgYg', 'eu', 'default-node')  # Host, Port, Password, Region, Name
+            bot.lavalink.add_node('127.0.0.1', 3333, 'VYTIftiyFIYVtvgbTVGHtyvguHRDTKF7itukhgYg', 'eu', 'default-node')  # Host, Port, Password, Region, Name
             bot.add_listener(bot.lavalink.voice_update_handler, 'on_socket_response')
 
         lavalink.add_event_hook(self.track_hook)
@@ -86,7 +86,7 @@ class Music(commands.Cog, name='Muzyczne'):
                 await ctx.guild.change_voice_state(channel=ctx.author.voice.channel)
             else:
                 if int(player.channel_id) != ctx.author.voice.channel.id:
-                    raise commands.CommandInvokeError('Musisz być na kanale głosowym ze mną.')
+                    raise commands.CommandInvokeError('Musisz być na vc z botem.')
 
     async def track_hook(self, event):
         '''if isinstance(event, lavalink.events.QueueEndEvent):
@@ -109,7 +109,7 @@ class Music(commands.Cog, name='Muzyczne'):
         # Check if the user input might be a URL. If it isn't, we can Lavalink do a YouTube search for it instead.
         # SoundCloud searching is possible by prefixing "scsearch:" instead.
         if not url_rx.match(query):
-            query = f'ytsearch:{query}'
+            query = f'ytmsearch:{query}'
 
         # Get the results for the query from Lavalink.
         results = await player.node.get_tracks(query)
