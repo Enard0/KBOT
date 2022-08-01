@@ -89,7 +89,7 @@ class Music(commands.Cog, name='Muzyczne'):
                     raise commands.CommandInvokeError('Musisz być na vc z botem.')
 
     async def track_hook(self, event):
-        embed = discord.Embed(title="EVENT",colour=discord.Colour.dark_red)
+        embed = discord.Embed(title="EVENT",colour=discord.Colour.dark_red())
         embed.add_field(name="typ",value=str(type(event)),inline=False)
         try:
             for slot in event.__slots__:
