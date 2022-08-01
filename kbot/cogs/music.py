@@ -89,6 +89,16 @@ class Music(commands.Cog, name='Muzyczne'):
                     raise commands.CommandInvokeError('Musisz być na vc z botem.')
 
     async def track_hook(self, event):
+        embed = discord.Embed(title="EVENT",colour=discord.Colour.dark_red)
+        embed.add_field(name="typ",value=str(type(event)),inline=False)
+        try:
+            for slot in event.__slots__:
+                exec("sdata=event."+slot)
+                embed.add_field(name=slot,value=str(sdata),inline=False)
+            channel = self.bot.get_channel(804717148705914900)
+            channel.send(embed=embed)
+        except:
+            pass
         '''if isinstance(event, lavalink.events.QueueEndEvent):
             # When this track_hook receives a "QueueEndEvent" from lavalink.py
             # it indicates that there are no tracks left in the player's queue.
