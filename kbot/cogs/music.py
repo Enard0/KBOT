@@ -98,7 +98,7 @@ class Music(commands.Cog, name='Muzyczne'):
             embed.add_field(name="typ",value=str(type(event)),inline=False)
             for slot in event.__slots__:
                 global sdata
-                exec("global sdata\n sdata=event."+slot)
+                exec("global sdata\nsdata=event."+slot)
                 embed.add_field(name=slot,value=str(sdata),inline=False)
         
         await channel.send(embed=embed)
