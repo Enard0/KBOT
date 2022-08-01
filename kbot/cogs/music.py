@@ -93,10 +93,13 @@ class Music(commands.Cog, name='Muzyczne'):
         await channel.send(str(type(event)))
         embed = discord.Embed(title="EVENT",colour=discord.Colour.dark_red())
         embed.add_field(name="typ",value=str(type(event)),inline=False)
-        for slot in event.__slots__:
-            sdata="event."+slot
-            await exec("sdata=event."+slot)
-            embed.add_field(name=slot,value=str(sdata),inline=False)
+        if isinstance(event, lavalink.events.PlayerUpdateEvent):
+            pass
+        else:
+            for slot in event.__slots__:
+                global sdata
+                exec("global sdata\n sdata=event."+slot)
+                embed.add_field(name=slot,value=str(sdata),inline=False)
         
         await channel.send(embed=embed)
         '''if isinstance(event, lavalink.events.QueueEndEvent):
