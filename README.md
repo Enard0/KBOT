@@ -1,2 +1,2 @@
 # KBOT
-Bocik taki mózyczny niedziałajoncy
+Bot muzyczny discord
