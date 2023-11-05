@@ -1,16 +1,21 @@
 from nextcord import Intents
-from nextcord.ext.commands import Bot
 
-from newkbot.config import Config
+from newkbot.config import BotConfig
 from newkbot.cogs import register_all_cogs
+from newkbot.abstracts import Bot
 
+from logging import DEBUG, getLogger
+
+getLogger("mafic").setLevel(DEBUG)
 
 def start_bot():
     intents = Intents.default()
     intents.message_content = True
+    intents.guilds = True
+    intents.voice_states = True
 
-    bot = Bot(Config.CMD_PREFIX, intents=intents)
+    bot = Bot(BotConfig.CMD_PREFIX, intents=intents)
 
     register_all_cogs(bot)
 
-    bot.run(Config.TOKEN)
+    bot.run(BotConfig.TOKEN)
