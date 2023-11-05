@@ -1,20 +1,11 @@
 from nextcord.ext.commands import Cog, Context
-from nextcord import Interaction, Member, slash_command
+from nextcord import Interaction, Member, slash_command, Interaction, Member, Embed, Color
 
-from newkbot.abstracts import Bot
+from newkbot.models import Bot, Select_Song_Button, KPlayer
 
-from mafic import Player, Playlist, Track, TrackEndEvent
+from mafic import Playlist, Track, TrackEndEvent, SearchType
 
-from nextcord import Interaction, Member
-
-from nextcord.abc import Connectable
-
-class MyPlayer(Player[Bot]):
-    def __init__(self, client: Bot, channel: Connectable) -> None:
-        super().__init__(client, channel)
-
-        # Mafic does not provide a queue system right now, low priority.
-        self.queue: list[Track] = []
+from nextcord.ui import Button, View
 
 class __MusicCog(Cog):
     def __init__(self, bot: Bot):
@@ -30,29 +21,34 @@ class __MusicCog(Cog):
         assert isinstance(inter.user, Member)
 
         if not inter.user.voice or not inter.user.voice.channel:
-            return await inter.response.send_message("You are not in a voice channel.")
-
+            return await inter.response.send_message("Nie jesteś połączony z kanałem głosowym.", ephemeral=True)
+        
         channel = inter.user.voice.channel
 
-        # This apparently **must** only be `Client`.
-        await channel.connect(cls=MyPlayer)  # pyright: ignore[reportGeneralTypeIssues]
-        await inter.send(f"Dołaczono do {channel.mention}.")
+        if inter.guild.voice_client:
+            if inter.guild.voice_client.channel == channel:
+                return await inter.response.send_message("Bot jest już na kanale z tobą UwU.", ephemeral=True)
+            else:
+                await inter.guild.voice_client.move_to(channel)  # pyright: ignore[reportGeneralTypeIssues]
+                return await inter.send(f"Przełączono do {channel.mention}.",delete_after=5)
 
-    @slash_command(dm_permission=False, guild_ids=[801198165428535316])
+        await channel.connect(cls=KPlayer)  # pyright: ignore[reportGeneralTypeIssues]
+        await inter.send(f"Dołaczono do {channel.mention}.",delete_after=5)
+
+    @slash_command(dm_permission=False)
     async def leave(self,inter: Interaction[Bot]):
         """Leave current voice channel."""
         assert isinstance(inter.user, Member)
 
-        if not inter.user.voice or not inter.user.voice.channel:
-            return await inter.response.send_message("You are not in a voice channel.")
-
-        channel = inter.user.voice.channel
-
+        if not inter.guild.voice_client:
+            return await inter.response.send_message("Bota nie ma na kanale głosowym.", ephemeral=True)
+        
         # This apparently **must** only be `Client`.
-        await channel.connect(cls=MyPlayer)  # pyright: ignore[reportGeneralTypeIssues]
-        await inter.send(f"Dołaczono do {channel.mention}.")
+        channel = inter.guild.voice_client.channel
+        await inter.guild.voice_client.disconnect()  # pyright: ignore[reportGeneralTypeIssues]
+        await inter.send(f"Rozłączono z {channel.mention}.",delete_after=5)
 
-    @slash_command(dm_permission=False, guild_ids=[801198165428535316])
+    @slash_command(dm_permission=False)
     async def play(self, inter: Interaction[Bot], query: str):
         """Play a song.
 
@@ -61,12 +57,18 @@ class __MusicCog(Cog):
         """
         assert inter.guild is not None
 
+        if not inter.user.voice or not inter.user.voice.channel:
+            return await inter.response.send_message("Połącz się z kanałem głosowym", ephemeral=True)
+    
         if not inter.guild.voice_client:
             await self.join(inter)
 
-        player: MyPlayer = (
+        if not inter.guild.voice_client.channel == inter.user.voice.channel:
+            return await inter.response.send_message("Bot jest na innym kanale. Uzyj /join aby przenieść", ephemeral=True)
+
+        player: KPlayer = (
             inter.guild.voice_client
-        )  # pyright: ignore[reportGeneralTypeIssues]
+        )
 
         tracks = await player.fetch_tracks(query)
 
@@ -76,13 +78,29 @@ class __MusicCog(Cog):
         if isinstance(tracks, Playlist):
             tracks = tracks.tracks
             if len(tracks) > 1:
-                player.queue.extend(tracks[1:])
+                player.queue.extend(tracks)
+
+        else:
+            if len(tracks)>1:
+                view = View(timeout=30, auto_defer=False)
+                embed = Embed(color=Color.magenta(),title='Wybierz utwór:')
+                for i, track in enumerate(tracks[:5]):
+                    view.add_item(Select_Song_Button(i,track.uri))
+                    embed.add_field(name=f'{i+1}.',value=f'{track.title}',inline=False)
+                    embed.add_field(name=" ",value=" ",inline=False)
+                return await inter.send(embed=embed, view=view, ephemeral=True)
 
         track = tracks[0]
-
+        if
         await player.play(track)
 
         await inter.send(f"Playing {track}")
+    @Cog.listener()
+    async def on_track_end(event: TrackEndEvent):
+        assert isinstance(event.player, KPlayer)
+
+        if event.player.queue:
+            await event.player.play(event.player.queue.pop(0))
     
 
 

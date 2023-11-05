@@ -3,7 +3,7 @@ from nextcord import Interaction, Member, slash_command
 
 import traceback
 
-from newkbot.abstracts import Bot
+from newkbot.models import Bot
 
 import time
 

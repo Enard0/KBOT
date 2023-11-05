@@ -5,3 +5,4 @@ token.txt
 newkbot/__pycache__
 newkbot/cogs/__pycache__
 newkbot/config/__pycache__
+newkbot/models/__pycache__
