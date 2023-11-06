@@ -1,5 +1,5 @@
 from mafic import Player
-from newkbot.models import Bot
+from bot.models import Bot
 from nextcord.abc import Connectable
 from mafic import Track
 

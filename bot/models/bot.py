@@ -1,5 +1,5 @@
 from nextcord.ext import commands
-from newkbot.config import MusicConfig
+from bot.config import MusicConfig
 
 from mafic import NodePool
 

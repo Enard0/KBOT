@@ -1,8 +1,7 @@
 lavalink/*
-kbot/token.txt
 lavalink/application.yml
 token.txt
-newkbot/__pycache__
-newkbot/cogs/__pycache__
-newkbot/config/__pycache__
-newkbot/models/__pycache__
+bot/__pycache__
+bot/cogs/__pycache__
+bot/config/__pycache__
+bot/models/__pycache__

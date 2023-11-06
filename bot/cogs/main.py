@@ -1,7 +1,7 @@
 from nextcord.ext.commands import Bot
 
-from newkbot.cogs.util import register_util_cog
-from newkbot.cogs.music import register_music_cog
+from bot.cogs.util import register_util_cog
+from bot.cogs.music import register_music_cog
 
 
 def register_all_cogs(bot: Bot) -> None:

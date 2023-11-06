@@ -1,7 +1,7 @@
 from nextcord.ext.commands import Cog, Context
 from nextcord import Interaction, Member, slash_command, Interaction, Member, Embed, Color
 
-from newkbot.models import Bot, Select_Song_Button, KPlayer
+from bot.models import Bot, Select_Song_Button, KPlayer
 
 from mafic import Playlist, Track, TrackEndEvent, SearchType
 
@@ -77,8 +77,7 @@ class __MusicCog(Cog):
 
         if isinstance(tracks, Playlist):
             tracks = tracks.tracks
-            if len(tracks) > 1:
-                player.queue.extend(tracks)
+            player.queue.extend(tracks)
 
         else:
             if len(tracks)>1:
@@ -89,14 +88,16 @@ class __MusicCog(Cog):
                     embed.add_field(name=f'{i+1}.',value=f'{track.title}',inline=False)
                     embed.add_field(name=" ",value=" ",inline=False)
                 return await inter.send(embed=embed, view=view, ephemeral=True)
+            else:
+                player.queue.extend(tracks)
 
-        track = tracks[0]
-        if
-        await player.play(track)
+        if not player.current:
+            await player.play(player.queue.pop(0))
 
         await inter.send(f"Playing {track}")
+
     @Cog.listener()
-    async def on_track_end(event: TrackEndEvent):
+    async def on_track_end(self,event: TrackEndEvent):
         assert isinstance(event.player, KPlayer)
 
         if event.player.queue:

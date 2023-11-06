@@ -3,7 +3,7 @@ from nextcord import Interaction, Member, slash_command
 
 import traceback
 
-from newkbot.models import Bot
+from bot.models import Bot
 
 import time
 
@@ -31,7 +31,7 @@ class __UtilCog(Cog):
     @Cog.listener()
     async def on_application_command_error(self,inter: Interaction[Bot], error: Exception):
         traceback.print_exception(type(error), error, error.__traceback__)
-        await inter.send(f"Wystąpił nieoczekiwany błąd: {error}")
+        await inter.send(f"Wystąpił nieoczekiwany błąd",delete_after=15)
 
 
 def register_util_cog(bot: Bot) -> None:

@@ -14,4 +14,5 @@ class Select_Song_Button(Button):
         track = await player.fetch_tracks(self.custom_id)
         player.queue.append(track[0])
         
-        await player.play(track[0])
+        if not player.current:
+            await player.play(player.queue.pop(0))

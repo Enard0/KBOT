@@ -1,8 +1,8 @@
 from nextcord import Intents
 
-from newkbot.config import BotConfig
-from newkbot.cogs import register_all_cogs
-from newkbot.models import Bot
+from bot.config import BotConfig
+from bot.cogs import register_all_cogs
+from bot.models import Bot
 
 from logging import DEBUG, getLogger
 
