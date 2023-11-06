@@ -4,4 +4,5 @@ token.txt
 bot/__pycache__
 bot/cogs/__pycache__
 bot/config/__pycache__
+bot/config/config.py
 bot/models/__pycache__
