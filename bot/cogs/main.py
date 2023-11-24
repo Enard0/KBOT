@@ -5,7 +5,7 @@ from bot.cogs.music import register_music_cog
 
 
 def register_all_cogs(bot: Bot) -> None:
-    bot.load_extension('onami')
+    bot.load_extension("onami")
     cogs = (
         register_util_cog,
         register_music_cog,
