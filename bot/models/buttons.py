@@ -1,5 +1,7 @@
 from nextcord.ui import Button
-from nextcord import ButtonStyle, Interaction
+from datetime import datetime
+from nextcord import ButtonStyle, Interaction, Embed, Color
+from .player import KPlayer
 
 
 class buttons:
@@ -12,16 +14,25 @@ class buttons:
             )
 
         async def callback(self, interaction: Interaction):
-            player = interaction.guild.voice_client
+            player: KPlayer = interaction.guild.voice_client
             await interaction.response.edit_message(
                 content=self.custom_id,
                 embed=None,
                 view=None,
-                delete_after=1,
+                delete_after=0.1,
             )
-            await interaction.send(content=self.custom_id)
             track = await player.fetch_tracks(self.custom_id)
-            player.queue.append(track[0])
+            track = track[0]
+            embed = Embed(
+                color=Color.purple(),
+                title="Dodano utwór:",
+                description=f"[{track.title}]({track.uri})",
+                timestamp=datetime.now(),
+            )
+            embed.set_author(name=interaction.user, icon_url=interaction.user.avatar)
+            embed.set_thumbnail(track.artwork_url)
+            await interaction.send(embed=embed)
+            player.queue.append(track)
 
             if not player.current:
-                await player.play(player.queue.pop(0))
+                await player.play_next()

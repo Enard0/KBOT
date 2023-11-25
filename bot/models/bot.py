@@ -25,3 +25,7 @@ class Bot(commands.Bot):
         )
 
         self.ready_ran = True
+
+    async def on_close(self):
+        for player in self.voice_clients:
+            await player.disconnect()

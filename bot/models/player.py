@@ -18,15 +18,21 @@ class KPlayer(Player[Bot]):
         await self.guild.change_voice_state(channel=channel)
         self.channel = channel
 
-    async def play_next(self) -> bool:
+    async def play_next(self, position=None) -> bool:
         if not self.queue:
             return False
-        if len(self.queue) <= self.pos:
-            if not self.loop:
-                return False
-            await self.play(self.queue[0])
-            self.pos = 1
+        if position is None:
+            if len(self.queue) <= self.pos:
+                if not self.loop:
+                    return False
+                await self.play(self.queue[0])
+                self.pos = 1
+                return True
+            await self.play(self.queue[self.pos])
+            self.pos += 1
             return True
-        await self.play(self.queue[self.pos])
-        self.pos += 1
+        if position - 1 < 0 or position > len(self.queue):
+            return False
+        await self.play(self.queue[position - 1])
+        self.pos = position
         return True

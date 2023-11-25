@@ -1,4 +1,5 @@
 from nextcord.ext.commands import Cog
+from datetime import datetime
 from nextcord import (
     Interaction,
     Member,
@@ -12,7 +13,7 @@ from typing import Optional
 
 from bot.models import Bot, KPlayer, buttons, checks
 
-from mafic import Playlist, TrackEndEvent
+from mafic import Playlist, TrackEndEvent, EndReason
 
 from nextcord.ui import View
 
@@ -121,20 +122,106 @@ class __MusicCog(Cog):
                     embed.add_field(name=" ", value=" ", inline=False)
                 return await inter.send(embed=embed, view=view, ephemeral=True)
             else:
-                player.queue.extend(tracks)
-                await inter.send(f"Dodano {tracks}")
+                track = tracks[0]
+                player.queue.append(track)
+                embed = Embed(
+                    color=Color.purple(),
+                    title="Dodano utwór:",
+                    description=f"[{track.title}]({track.uri})",
+                    timestamp=datetime.now(),
+                )
+                embed.set_author(name=inter.user, icon_url=inter.user.avatar)
+                embed.set_thumbnail(track.artwork_url)
+                await inter.send(embed=embed)
 
         if not player.current:
             await player.play_next()
 
     @slash_command(dm_permission=False)
     @checks.joinedVc()
-    async def skip(self, inter: Interaction[Bot]):
-        """Pomiń obecny utwór."""
+    async def skip(
+        self,
+        inter: Interaction[Bot],
+        pos: int = SlashOption(
+            required=False,
+            default=None,
+        ),
+    ):
+        """Pomiń obecny utwór, lub kilka utworów."""
         player: KPlayer = inter.guild.voice_client
+        if pos is not None:
+            if pos < 0 and player.pos + pos < 1:
+                return await inter.send(
+                    f"""nie można cofnąć o {-pos}.
+Maksymalnie można cofnąć o {player.pos-1}"""
+                )
+            if pos > len(player.queue) - player.pos:
+                return await inter.send(
+                    f"""Nie można pominąć o {pos} utworów.
+Maksymalnie można pominąć {len(player.queue)-player.pos}""",
+                    ephemeral=True,
+                )
+            return await inter.send(
+                "Pominięto o " + str(pos)
+                if await player.play_next(player.pos + pos)
+                else "Wystąpił błąd"
+            )
         return await inter.send(
             "Pominięto" if await player.play_next() else "Kolejka jest pusta"
         )
+
+    @slash_command(dm_permission=False)
+    @checks.joinedVc()
+    async def jump(
+        self,
+        inter: Interaction[Bot],
+        to: int = SlashOption(
+            required=True,
+            default=None,
+            min_value=-1,
+        ),
+    ):
+        """Przeskocz do pozycji."""
+        player: KPlayer = inter.guild.voice_client
+        if to == 0:
+            to = 1
+        if to == -1:
+            return await inter.send(
+                f"Przeskoczono do  pozycji {len(player.queue)}"
+                if await player.play_next(len(player.queue))
+                else "Kolejka jest pusta"
+            )
+        return await inter.send(
+            f"Przeskoczono do pozycji {to}"
+            if await player.play_next(to)
+            else "Nie można przewinąć do tej pozycji"
+        )
+
+    @slash_command(dm_permission=False)
+    @checks.joinedVc()
+    async def queue(self, inter: Interaction[Bot]):
+        """Wyświetl kolejkę utworów."""
+        player: KPlayer = inter.guild.voice_client
+        if len(player.queue) == 0:
+            return await inter.send("Kolejka jest pusta")
+        startpos = int(player.pos / 10) * 10
+        o = "```\n"
+        endpos = min(10, len(player.queue) - startpos)
+        for i in range(endpos):
+            if startpos + endpos in (10, 100, 1000) and i != 9:
+                o += " "
+            o += (
+                f"{str(startpos + i+1)})  {player.queue[startpos + i].title}\n\n"
+                if i + 1 != player.pos
+                else f"""    ⬐ == Obecnie odtwarzane ==
+{str(startpos + i+1)})  {player.queue[startpos + i].title}
+    ⬑ ========================\n\n"""
+            )
+        embed = Embed(title="Kolejka utworów", description=o + "```")
+        embed.set_footer(
+            text=f"🔁 Zapętlenie: {'✅ włączone' if player.loop else '❌ wyłączone'}\n🔀 Przemieszanie: {'✅ włączone' if player.shuffle else '❌ wyłączone'}"
+        )
+        return await inter.send(embed=embed)
 
     @slash_command(dm_permission=False)
     @checks.joinedVc()
@@ -154,6 +241,8 @@ class __MusicCog(Cog):
     @Cog.listener()
     async def on_track_end(self, event: TrackEndEvent):
         assert isinstance(event.player, KPlayer)
+        if event.reason == EndReason.REPLACED:
+            return
         await event.player.play_next()
 
 
