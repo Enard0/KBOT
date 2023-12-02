@@ -2,6 +2,7 @@ from mafic import Player
 from bot.models import Bot
 from nextcord.abc import Connectable
 from mafic import Track
+from random import shuffle, randint
 
 
 class KPlayer(Player[Bot]):
@@ -21,13 +22,27 @@ class KPlayer(Player[Bot]):
     async def play_next(self, position=None) -> bool:
         if not self.queue:
             return False
+        if self.shuffle == 2:
+            self.pos = randint(1, len(self.queue))
+            await self.play(self.queue[self.pos - 1])
+            return True
         if position is None:
             if len(self.queue) <= self.pos:
                 if not self.loop:
                     return False
+                if self.shuffle == 1:
+                    shuffle(self.queue)
+                if self.shuffle == 3:
+                    track: Track = self.queue.pop(randint(0, len(self.queue) - 1))
+                    self.queue.insert(0, track)
                 await self.play(self.queue[0])
                 self.pos = 1
                 return True
+            if self.shuffle == 3:
+                track: Track = self.queue.pop(
+                    randint(self.pos - 1, len(self.queue) - 1)
+                )
+                self.queue.insert(self.pos - 1, track)
             await self.play(self.queue[self.pos])
             self.pos += 1
             return True

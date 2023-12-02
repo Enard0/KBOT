@@ -11,7 +11,7 @@ from nextcord import (
 
 from typing import Optional
 
-from bot.models import Bot, KPlayer, buttons, checks
+from bot.models import Bot, KPlayer, buttons, decorators, autocomplete
 
 from mafic import Playlist, TrackEndEvent, EndReason
 
@@ -70,7 +70,11 @@ class __MusicCog(Cog):
     async def play(
         self,
         inter: Interaction[Bot],
-        query: str,
+        query: str = SlashOption(
+            name="query",
+            autocomplete=True,
+            autocomplete_callback=autocomplete.ytSearch,
+        ),
         special: str = SlashOption(
             name="special",
             required=False,
@@ -120,12 +124,14 @@ class __MusicCog(Cog):
                         name=f"{i+1}.", value=f"{track.title}", inline=False
                     )
                     embed.add_field(name=" ", value=" ", inline=False)
-                return await inter.send(embed=embed, view=view, ephemeral=True)
+                return await inter.send(
+                    embed=embed, view=view, ephemeral=True, delete_after=30
+                )
             else:
                 track = tracks[0]
                 player.queue.append(track)
                 embed = Embed(
-                    color=Color.purple(),
+                    color=Color.dark_green(),
                     title="Dodano utwór:",
                     description=f"[{track.title}]({track.uri})",
                     timestamp=datetime.now(),
@@ -138,7 +144,7 @@ class __MusicCog(Cog):
             await player.play_next()
 
     @slash_command(dm_permission=False)
-    @checks.joinedVc()
+    @decorators.joinedVc()
     async def skip(
         self,
         inter: Interaction[Bot],
@@ -171,7 +177,7 @@ Maksymalnie można pominąć {len(player.queue)-player.pos}""",
         )
 
     @slash_command(dm_permission=False)
-    @checks.joinedVc()
+    @decorators.joinedVc()
     async def jump(
         self,
         inter: Interaction[Bot],
@@ -198,7 +204,7 @@ Maksymalnie można pominąć {len(player.queue)-player.pos}""",
         )
 
     @slash_command(dm_permission=False)
-    @checks.joinedVc()
+    @decorators.joinedVc()
     async def queue(self, inter: Interaction[Bot]):
         """Wyświetl kolejkę utworów."""
         player: KPlayer = inter.guild.voice_client
@@ -219,12 +225,13 @@ Maksymalnie można pominąć {len(player.queue)-player.pos}""",
             )
         embed = Embed(title="Kolejka utworów", description=o + "```")
         embed.set_footer(
-            text=f"🔁 Zapętlenie: {'✅ włączone' if player.loop else '❌ wyłączone'}\n🔀 Przemieszanie: {'✅ włączone' if player.shuffle else '❌ wyłączone'}"
+            text=f"""🔁 Zapętlenie: {'✅ włączone' if player.loop else '❌ wyłączone'}
+🔀Przemieszanie: {'✅ włączone' if player.shuffle else '❌ wyłączone'}"""
         )
         return await inter.send(embed=embed)
 
     @slash_command(dm_permission=False)
-    @checks.joinedVc()
+    @decorators.joinedVc()
     async def loop(
         self,
         inter: Interaction[Bot],
@@ -237,6 +244,99 @@ Maksymalnie można pominąć {len(player.queue)-player.pos}""",
             return await inter.send(
                 "Włączono zapętlenie" if player.loop else "Wyłączono zapętlenie"
             )
+
+    @slash_command(dm_permission=False)
+    @decorators.joinedVc()
+    async def shuffle(
+        self,
+        inter: Interaction[Bot],
+        _set: str = SlashOption(
+            name="set",
+            required=False,
+            choices=["0 off", "1 once", "2 each", "3 next"],
+        ),
+    ):
+        """Ustaw tryb przemieszania."""
+        player: KPlayer = inter.guild.voice_client
+        if _set is None:
+            player.shuffle += 3
+            if player.shuffle > 3:
+                player.shuffle = 0
+        else:
+            player.shuffle = int(_set[0])
+        match player.shuffle:
+            case 0:
+                text = "Wyłączono przemieszanie kolejki"
+            case 1:
+                text = "Przemieszanie kolejki: przy loopie"
+            case 2:
+                text = "Przemieszanie kolejki: każdy utwór losowo"
+            case 3:
+                text = "Przemieszanie kolejki: kolejny utwór losowo"
+        embed = Embed(
+            color=Color.purple(),
+            title=text,
+            description="",
+            timestamp=datetime.now(),
+        )
+        embed.set_author(name=inter.user, icon_url=inter.user.avatar)
+        return await inter.send(embed=embed)
+
+    @slash_command(dm_permission=False)
+    @decorators.joinedVc()
+    async def clear(self, inter: Interaction[Bot]):
+        """Wyczyść kolejke utworów."""
+        player: KPlayer = inter.guild.voice_client
+        if len(player.queue) == 0:
+            return await inter.send("Kolejka jest już pusta", ephemeral=True)
+        view = View(timeout=30, auto_defer=False)
+        view.add_item(buttons.ClearQueue())
+        embed = Embed(
+            color=Color.dark_red(),
+            title="Czy chcesz wyczyścić kolejkę?",
+            description="",
+            timestamp=datetime.now(),
+        )
+        embed.set_footer(
+            text="Tej akcji nie można cofnąć",
+        )
+        embed.set_author(name=inter.user, icon_url=inter.user.avatar)
+        await inter.send(embed=embed, view=view, ephemeral=True, delete_after=30)
+
+    @slash_command(dm_permission=False)
+    @decorators.joinedVc()
+    async def remove(
+        self,
+        inter: Interaction[Bot],
+        pos: int = SlashOption(
+            required=True,
+            default=None,
+            min_value=-1,
+        ),
+    ):
+        """Wyczyść kolejke utworów."""
+        player: KPlayer = inter.guild.voice_client
+        if pos == 0:
+            pos = 1
+        if pos == -1:
+            pos = len(player.queue)
+        if len(player.queue) < pos:
+            return await inter.send("Kolejka jest już pusta", ephemeral=True)
+        view = View(timeout=30, auto_defer=False)
+        view.add_item(buttons.RemoveQueue(pos - 1))
+        track = player.queue[pos - 1]
+        embed = Embed(
+            color=Color.dark_red(),
+            title="Czy chcesz usunąć ten utwór?",
+            description=f"[{track.title}]({track.uri})",
+            timestamp=datetime.now(),
+        )
+        embed.set_footer(
+            text="Tej akcji nie można cofnąć",
+        )
+        embed.set_author(name=inter.user, icon_url=inter.user.avatar)
+        embed.set_thumbnail(track.artwork_url)
+        await inter.send(embed=embed, view=view, ephemeral=True, delete_after=30)
 
     @Cog.listener()
     async def on_track_end(self, event: TrackEndEvent):
