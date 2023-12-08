@@ -14,6 +14,7 @@ def start_bot():
     intents.message_content = True
     intents.guilds = True
     intents.voice_states = True
+    intents.members = True
 
     bot = Bot(
         BotConfig.CMD_PREFIX,

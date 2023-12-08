@@ -167,14 +167,18 @@ Maksymalnie można cofnąć o {player.pos-1}"""
 Maksymalnie można pominąć {len(player.queue)-player.pos}""",
                     ephemeral=True,
                 )
+            if await player.play_next(player.pos + pos):
+                return await inter.send(
+                    embed=Embed(
+                        color=Color.dark_magenta(), title="Pominięto o " + str(pos)
+                    )
+                )
+            return await inter.send("Wystąpił błąd")
+        if await player.play_next():
             return await inter.send(
-                "Pominięto o " + str(pos)
-                if await player.play_next(player.pos + pos)
-                else "Wystąpił błąd"
+                embed=Embed(color=Color.dark_magenta(), title="Pominięto")
             )
-        return await inter.send(
-            "Pominięto" if await player.play_next() else "Kolejka jest pusta"
-        )
+        return await inter.send("Kolejka jest pusta")
 
     @slash_command(dm_permission=False)
     @decorators.joinedVc()
@@ -192,16 +196,23 @@ Maksymalnie można pominąć {len(player.queue)-player.pos}""",
         if to == 0:
             to = 1
         if to == -1:
+            if await player.play_next(len(player.queue)):
+                return await inter.send(
+                    embed=Embed(
+                        color=Color.dark_magenta(),
+                        title=f"Przeskoczono do  pozycji {len(player.queue)}",
+                    )
+                )
+            return await inter.send("Kolejka jest pusta")
+        if await player.play_next(to):
             return await inter.send(
-                f"Przeskoczono do  pozycji {len(player.queue)}"
-                if await player.play_next(len(player.queue))
-                else "Kolejka jest pusta"
+                embed=Embed(
+                    color=Color.dark_magenta(),
+                    title=f"Przeskoczono do pozycji {to}",
+                )
             )
-        return await inter.send(
-            f"Przeskoczono do pozycji {to}"
-            if await player.play_next(to)
-            else "Nie można przewinąć do tej pozycji"
-        )
+
+        return await inter.send("Nie można przewinąć do tej pozycji")
 
     @slash_command(dm_permission=False)
     @decorators.joinedVc()
@@ -218,17 +229,25 @@ Maksymalnie można pominąć {len(player.queue)-player.pos}""",
                 o += " "
             o += (
                 f"{str(startpos + i+1)})  {player.queue[startpos + i].title}\n\n"
-                if i + 1 != player.pos
+                if startpos + i + 1 != player.pos
                 else f"""    ⬐ == Obecnie odtwarzane ==
 {str(startpos + i+1)})  {player.queue[startpos + i].title}
     ⬑ ========================\n\n"""
             )
-        embed = Embed(title="Kolejka utworów", description=o + "```")
+        embed = Embed(
+            title="Kolejka utworów",
+            description=o + "```",
+        )
         embed.set_footer(
             text=f"""🔁 Zapętlenie: {'✅ włączone' if player.loop else '❌ wyłączone'}
 🔀Przemieszanie: {'✅ włączone' if player.shuffle else '❌ wyłączone'}"""
         )
-        return await inter.send(embed=embed)
+        view = View(timeout=None, auto_defer=False)
+        view.add_item(buttons.QueuePage("Prev", startpos - 10, startpos - 10 < 0))
+        view.add_item(
+            buttons.QueuePage("Next", startpos + 10, startpos + 10 >= len(player.queue))
+        )
+        return await inter.send(embed=embed, view=view)
 
     @slash_command(dm_permission=False)
     @decorators.joinedVc()
@@ -241,9 +260,11 @@ Maksymalnie można pominąć {len(player.queue)-player.pos}""",
         player: KPlayer = inter.guild.voice_client
         if _set is None:
             player.loop = ~player.loop
-            return await inter.send(
-                "Włączono zapętlenie" if player.loop else "Wyłączono zapętlenie"
-            )
+            if player.loop:
+                return await inter.send(
+                    embed=Embed(color=Color.dark_teal(), title="Włączono zapętlenie")
+                )
+            return await inter.send("Wyłączono zapętlenie")
 
     @slash_command(dm_permission=False)
     @decorators.joinedVc()
@@ -274,7 +295,7 @@ Maksymalnie można pominąć {len(player.queue)-player.pos}""",
             case 3:
                 text = "Przemieszanie kolejki: kolejny utwór losowo"
         embed = Embed(
-            color=Color.purple(),
+            color=Color.dark_teal(),
             title=text,
             description="",
             timestamp=datetime.now(),

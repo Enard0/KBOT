@@ -1,4 +1,4 @@
-from nextcord.ui import Button
+from nextcord.ui import Button, View
 from datetime import datetime
 from nextcord import ButtonStyle, Interaction, Embed, Color
 from .player import KPlayer
@@ -101,3 +101,49 @@ class buttons:
                 if player.pos > self.pos:
                     player.pos -= 1
                 await interaction.send(embed=embed)
+
+    class QueuePage(Button):
+        def __init__(self, label, pos, disb):
+            self.pos = pos
+            super().__init__(
+                label=label,
+                style=ButtonStyle.blurple,
+                disabled=disb,
+            )
+
+        async def callback(self, interaction: Interaction):
+            if await checks.joinedVc(interaction):
+                player: KPlayer = interaction.guild.voice_client
+                view = View(timeout=None, auto_defer=False)
+                view.add_item(
+                    buttons.QueuePage("Prev", self.pos - 10, self.pos - 10 < 0)
+                )
+                view.add_item(
+                    buttons.QueuePage(
+                        "Next", self.pos + 10, self.pos + 10 >= len(player.queue)
+                    )
+                )
+                o = "```\n"
+                endpos = min(10, len(player.queue) - self.pos)
+                for i in range(endpos):
+                    if self.pos + endpos in (10, 100, 1000) and i != 9:
+                        o += " "
+                    o += (
+                        f"{str(self.pos + i+1)})  {player.queue[self.pos + i].title}\n\n"
+                        if self.pos + i + 1 != player.pos
+                        else f"""    ⬐ == Obecnie odtwarzane ==
+{str(self.pos + i+1)})  {player.queue[self.pos + i].title}
+    ⬑ ========================\n\n"""
+                    )
+                embed = Embed(
+                    title="Kolejka utworów",
+                    description=o + "```",
+                )
+                embed.set_footer(
+                    text=f"""🔁 Zapętlenie: {'✅ włączone' if player.loop else '❌ wyłączone'}
+🔀Przemieszanie: {'✅ włączone' if player.shuffle else '❌ wyłączone'}"""
+                )
+                await interaction.response.edit_message(
+                    embed=embed,
+                    view=view,
+                )
