@@ -1,6 +1,4 @@
 lavalink/*
-lavalink/application.yml
-token.txt
 bot/__pycache__
 bot/cogs/__pycache__
 bot/config/__pycache__
