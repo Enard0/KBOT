@@ -9,7 +9,7 @@ from nextcord import (
     SlashOption,
 )
 import re
-from config import BotConfig
+from bot.config import BotConfig
 
 from typing import Optional
 
