@@ -5,6 +5,7 @@ from typing import Final
 class BotConfig(ABC):
     CMD_PREFIX: Final = "/"
     TOKEN: Final = "ODA0NzE1MjgwMzYxNTg2NzQ4.YBQXgQ.Lt31etyrnf8FMLJOFPCLUaWUqAk"
+    LOCATION: Final = ".\\bot\\playlists\\"
 
 
 class MusicConfig(ABC):

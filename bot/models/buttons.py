@@ -17,14 +17,22 @@ class buttons:
         async def callback(self, interaction: Interaction):
             if await checks.joinedVc(interaction):
                 player: KPlayer = interaction.guild.voice_client
+                track = await player.fetch_tracks(self.custom_id)
+                track = track[0]
+                for i in range(len(player.queue)):
+                    if player.queue[i].uri == track.uri:
+                        if player.shuffle == 2 or i >= player.pos:
+                            return await interaction.send(
+                                "Utwór już jest dodany", ephemeral=True
+                            )
+                        player.queue.pop(i)
+                        player.pos -= 1
                 await interaction.response.edit_message(
                     content=self.custom_id,
                     embed=None,
                     view=None,
                     delete_after=0.1,
                 )
-                track = await player.fetch_tracks(self.custom_id)
-                track = track[0]
                 embed = Embed(
                     color=Color.dark_green(),
                     title="Dodano utwór:",

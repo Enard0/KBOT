@@ -8,6 +8,8 @@ from nextcord import (
     Color,
     SlashOption,
 )
+import re
+from config import BotConfig
 
 from typing import Optional
 
@@ -16,11 +18,41 @@ from bot.models import Bot, KPlayer, buttons, decorators, autocomplete
 from mafic import Playlist, TrackEndEvent, EndReason
 
 from nextcord.ui import View
+from os import path
 
 
 class __MusicCog(Cog):
     def __init__(self, bot: Bot):
         self.bot = bot
+        self.playlistusers = dict()
+        self.playlistguilds = dict()
+        if not path.isfile(BotConfig.LOCATION + "index.conf"):
+            self.playlists = False
+            return
+
+        with open(BotConfig.LOCATION + "index.conf", "r") as file:
+            for line in file:
+                if path.isfile(BotConfig.LOCATION + line):
+                    with open(BotConfig.LOCATION + line, "r") as file2:
+                        file2.readline()
+                        owner = file2.readline().split("\n")[0]
+                        if owner in self.playlistusers:
+                            self.playlistusers[owner][0].append(line)
+                        else:
+                            self.playlistusers[owner] = [[line], []]
+                        users = file2.readline().split("\n")[0].split(";")[:-1]
+                        for user in users:
+                            if user in self.playlistusers:
+                                self.playlistusers[user][1].append(line)
+                            else:
+                                self.playlistusers[user] = [[], [line]]
+                        guilds = file2.readline().split("\n")[0].split(";")[:-1]
+                        for guild in guilds:
+                            if guild in self.playlistguilds:
+                                self.playlistguilds[guild].append(line)
+                            else:
+                                self.playlistguilds[guild] = [line]
+        self.playlists = True
 
     @Cog.listener()
     async def on_ready(self) -> None:
@@ -111,8 +143,26 @@ class __MusicCog(Cog):
 
         if isinstance(tracks, Playlist):
             tracks = tracks.tracks
-            player.queue.extend(tracks)
-            await inter.send(f"Dodano {tracks}")
+            errs = 0
+            for track in tracks:
+                for i in range(len(player.queue)):
+                    if player.queue[i].uri == track.uri:
+                        if player.shuffle == 2 or i >= player.pos:
+                            errs += 1
+                            break
+                        player.queue.pop(i)
+                        player.pos -= 1
+                else:
+                    player.queue.append(track)
+            embed = Embed(
+                color=Color.dark_green(),
+                title=f"Poprawnie dodano {len(tracks)-errs} utwórów, {errs} już występuje",
+                description=f"[{track.title}]({track.uri})",
+                timestamp=datetime.now(),
+            )
+            embed.set_author(name=inter.user, icon_url=inter.user.avatar)
+            embed.set_thumbnail(track.artwork_url)
+            return await inter.send(embed=embed)
 
         else:
             if len(tracks) > 1:
@@ -129,6 +179,14 @@ class __MusicCog(Cog):
                 )
             else:
                 track = tracks[0]
+                for i in range(len(player.queue)):
+                    if player.queue[i].uri == track.uri:
+                        if player.shuffle == 2 or i >= player.pos:
+                            return await inter.send(
+                                "Utwór już jest dodany", ephemeral=True
+                            )
+                        player.queue.pop(i)
+                        player.pos -= 1
                 player.queue.append(track)
                 embed = Embed(
                     color=Color.dark_green(),
@@ -358,6 +416,52 @@ Maksymalnie można pominąć {len(player.queue)-player.pos}""",
         embed.set_author(name=inter.user, icon_url=inter.user.avatar)
         embed.set_thumbnail(track.artwork_url)
         await inter.send(embed=embed, view=view, ephemeral=True, delete_after=30)
+
+    @slash_command(dm_permission=False)
+    @decorators.joinedVc()
+    async def save(self, inter: Interaction[Bot], name: str):
+        """Zapisz kolejke utworów pod podaną nazwą."""
+        player: KPlayer = inter.guild.voice_client
+        if not self.playlists:
+            return await inter.send(
+                "Wystąpił błąd przy ładowaniu playlist. Nie zadziała. Admin chuj"
+            )
+        if not re.match("^[A-Za-z0-9_-]*$", name):
+            return await inter.send(
+                "Niedozwolone znaki. Dozwolone duże małe litery, cyfry, `-` `_`",
+                ephemeral=True,
+            )
+        with open(BotConfig.LOCATION + "index.conf", "r") as file:
+            if (
+                name + inter.user.id in file.readlines
+                or name + inter.user.id + "\n" in file.readlines
+            ):
+                return await inter.send(
+                    "Masz już zapisaną playliste o takiej nazwie", ephemeral=True
+                )
+        with open(BotConfig.LOCATION + "index.conf", "a") as file:
+            file.write(name + "\n")
+        with open(BotConfig.LOCATION + name + inter.user.id, "w") as file:
+            file.writelines(
+                [
+                    name,
+                    inter.user.id,
+                    inter.user.id,
+                    inter.guild_id,
+                    "\n",
+                ]
+            )
+            for track in player.queue:
+                file.write(track.uri + ";")
+
+        embed = Embed(
+            color=Color.dark_green(),
+            title="Zapisano",
+            description=name,
+            timestamp=datetime.now(),
+        )
+        embed.set_author(name=inter.user, icon_url=inter.user.avatar)
+        return await inter.send(embed=embed)
 
     @Cog.listener()
     async def on_track_end(self, event: TrackEndEvent):
