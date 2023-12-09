@@ -44,7 +44,7 @@ class __UtilCog(Cog):
             pass
         elif not isinstance(error, str):
             traceback.print_exception(type(error), error, error.__traceback__)
-            await inter.send("Wystąpił nieoczekiwany błąd", delete_after=15)
+            await inter.channel.send("Wystąpił nieoczekiwany błąd", delete_after=15)
 
 
 def register_util_cog(bot: Bot) -> None:
