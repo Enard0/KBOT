@@ -424,7 +424,7 @@ Maksymalnie można pominąć {len(player.queue)-player.pos}""",
         player: KPlayer = inter.guild.voice_client
         if not self.playlists:
             return await inter.send(
-                "Wystąpił błąd przy ładowaniu playlist. Nie zadziała. Admin chuj"
+                "Wystąpił błąd przy zapisywaniu playlist. Nie zadziała. Admin chuj"
             )
         if not re.match("^[A-Za-z0-9_-]*$", name):
             return await inter.send(
