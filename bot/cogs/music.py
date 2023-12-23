@@ -157,11 +157,11 @@ class __MusicCog(Cog):
             embed = Embed(
                 color=Color.dark_green(),
                 title=f"Poprawnie dodano {len(tracks)-errs} utwórów, {errs} już występuje",
-                description=f"[{track.title}]({track.uri})",
+                description="",
                 timestamp=datetime.now(),
             )
             embed.set_author(name=inter.user, icon_url=inter.user.avatar)
-            embed.set_thumbnail(track.artwork_url)
+            embed.set_thumbnail(tracks[0].artwork_url)
             return await inter.send(embed=embed)
 
         else:
@@ -432,22 +432,22 @@ Maksymalnie można pominąć {len(player.queue)-player.pos}""",
                 ephemeral=True,
             )
         with open(BotConfig.LOCATION + "index.conf", "r") as file:
-            if (
-                name + inter.user.id in file.readlines
-                or name + inter.user.id + "\n" in file.readlines
-            ):
+            lines = file.readlines()
+            if name + str(inter.user.id) + "\n" in lines:
                 return await inter.send(
                     "Masz już zapisaną playliste o takiej nazwie", ephemeral=True
                 )
         with open(BotConfig.LOCATION + "index.conf", "a") as file:
-            file.write(name + "\n")
-        with open(BotConfig.LOCATION + name + inter.user.id, "w") as file:
+            file.write(name + str(inter.user.id) + "\n")
+        with open(BotConfig.LOCATION + name + str(inter.user.id), "w") as file:
             file.writelines(
                 [
                     name,
-                    inter.user.id,
-                    inter.user.id,
-                    inter.guild_id,
+                    str(inter.user.id),
+                    "\n",
+                    str(inter.user.id),
+                    "\n",
+                    str(inter.guild_id),
                     "\n",
                 ]
             )
