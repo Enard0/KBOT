@@ -43,8 +43,8 @@ class KPlayer(Player[Bot]):
                     randint(self.pos - 1, len(self.queue) - 1)
                 )
                 self.queue.insert(self.pos - 1, track)
-            await self.play(self.queue[self.pos])
             self.pos += 1
+            await self.play(self.queue[self.pos])
             return True
         if position - 1 < 0 or position > len(self.queue):
             return False
