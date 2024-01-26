@@ -39,9 +39,7 @@ class KPlayer(Player[Bot]):
                 self.pos = 1
                 return True
             if self.shuffle == 3:
-                track: Track = self.queue.pop(
-                    randint(self.pos - 1, len(self.queue) - 1)
-                )
+                track: Track = self.queue.pop(randint(self.pos, len(self.queue) - 1))
                 self.queue.insert(self.pos, track)
             await self.play(self.queue[self.pos])
             self.pos += 1
