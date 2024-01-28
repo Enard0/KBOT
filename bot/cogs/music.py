@@ -104,7 +104,7 @@ class __MusicCog(Cog):
         inter: Interaction[Bot],
         query: str = SlashOption(
             name="query",
-            autocomplete=True,
+            # autocomplete=True,
             # autocomplete_callback=autocomplete.ytSearch,
         ),
         special: str = SlashOption(
