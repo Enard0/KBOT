@@ -105,7 +105,7 @@ class __MusicCog(Cog):
         query: str = SlashOption(
             name="query",
             autocomplete=True,
-            autocomplete_callback=autocomplete.ytSearch,
+            # autocomplete_callback=autocomplete.ytSearch,
         ),
         special: str = SlashOption(
             name="special",
