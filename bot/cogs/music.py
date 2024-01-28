@@ -118,6 +118,7 @@ class __MusicCog(Cog):
         query:
           The song to search or play.
         """
+        await inter.response.defer()
         assert inter.guild is not None
 
         if not inter.user.voice or not inter.user.voice.channel:
@@ -276,6 +277,7 @@ Maksymalnie można pominąć {len(player.queue)-player.pos}""",
     @decorators.joinedVc()
     async def queue(self, inter: Interaction[Bot]):
         """Wyświetl kolejkę utworów."""
+        await inter.response.defer()
         player: KPlayer = inter.guild.voice_client
         if len(player.queue) == 0:
             return await inter.send("Kolejka jest pusta")
