@@ -19,7 +19,6 @@ def start_bot():
     bot = Bot(
         BotConfig.CMD_PREFIX,
         intents=intents,
-        default_guild_ids=[801198165428535316, 758418616021811290],
     )
 
     register_all_cogs(bot)

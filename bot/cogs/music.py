@@ -104,8 +104,8 @@ class __MusicCog(Cog):
         inter: Interaction[Bot],
         query: str = SlashOption(
             name="query",
-            autocomplete=True,
-            autocomplete_callback=autocomplete.ytSearch,
+            # autocomplete=True,
+            # autocomplete_callback=autocomplete.ytSearch,
         ),
         special: str = SlashOption(
             name="special",
@@ -118,6 +118,7 @@ class __MusicCog(Cog):
         query:
           The song to search or play.
         """
+        await inter.response.defer()
         assert inter.guild is not None
 
         if not inter.user.voice or not inter.user.voice.channel:
@@ -276,10 +277,11 @@ Maksymalnie można pominąć {len(player.queue)-player.pos}""",
     @decorators.joinedVc()
     async def queue(self, inter: Interaction[Bot]):
         """Wyświetl kolejkę utworów."""
+        await inter.response.defer()
         player: KPlayer = inter.guild.voice_client
         if len(player.queue) == 0:
             return await inter.send("Kolejka jest pusta")
-        startpos = int(player.pos / 10) * 10
+        startpos = int((player.pos - 1) / 10) * 10
         o = "```\n"
         endpos = min(10, len(player.queue) - startpos)
         for i in range(endpos):
@@ -460,6 +462,18 @@ Maksymalnie można pominąć {len(player.queue)-player.pos}""",
             description=name,
             timestamp=datetime.now(),
         )
+        if str(inter.guild_id) in self.playlistguilds:
+            self.playlistguilds[str(inter.guild_id)].append(name + str(inter.user.id))
+        else:
+            self.playlistguilds[str(inter.guild_id)] = [name + str(inter.user.id)]
+        if str(inter.user.id) in self.playlistusers:
+            self.playlistusers[str(inter.user.id)][0].append(name + str(inter.user.id))
+            self.playlistusers[str(inter.user.id)][1].append(name + str(inter.user.id))
+        else:
+            self.playlistusers[str(inter.user.id)] = [
+                [name + str(inter.user.id)],
+                [name + str(inter.user.id)],
+            ]
         embed.set_author(name=inter.user, icon_url=inter.user.avatar)
         return await inter.send(embed=embed)
 
